@@ -22,6 +22,12 @@ class Vec3():
     def __neg__(self):
         return Vec3(-self.x, -self.y, -self.z)
 
+    def __gt__(self, other):
+        return self.length() > other.length()
+
+    def __lt__(self, other):
+        return self.length() < other.length()
+
     def normalized(self):
         if self.length() == 0:
             return Vec3(0, 0, 0)

@@ -1,4 +1,5 @@
-import mesh, vecs
+import mesh
+import vecs
 
 
 # Reads in an obj file and returns a Mesh based on the geometry
@@ -19,3 +20,15 @@ def parseObj(inObj):
                  int(line[3]) - 1])
 
     return mesh.Mesh(outVerts, outFaces)
+
+
+def dumpObj(inMesh):
+    outTxt = 'o Mesh\n'
+
+    for v in inMesh.verts:
+        outTxt += 'v ' + str(v.x) + ' ' + str(v.y) + ' ' + str(v.z) + '\n'
+    outTxt += 's off\n'
+    for f in inMesh.faces:
+        outTxt += 'f ' + str(f[0]+1) + ' ' + \
+            str(f[1]+1) + ' ' + str(f[2]+1) + '\n'
+    return outTxt

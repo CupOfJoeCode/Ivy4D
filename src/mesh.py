@@ -46,5 +46,5 @@ class Mesh:
                 outFaces.append([vind0, mind0, mind2])
                 outFaces.append([mind0, vind1, mind1])
                 outFaces.append([mind2, mind1, vind2])
-                outFaces.append([mind1, mind2, mind0])
+                outFaces.append([mind0, mind1, mind2])
             self.faces = outFaces
