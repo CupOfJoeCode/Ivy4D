@@ -18,6 +18,7 @@ import camera
 import rotate
 import light
 import facenormal
+import trans
 
 
 # Import all the default geometries
@@ -79,9 +80,8 @@ def renderScene():
 
     # Draw gizmo in the middle of selected mesh
     for p in GIZMO_POINTS:
-        pTrans = rotate.rotateVector(p,
-                                     selectedMeshTransforms.rotate)
-        pTrans = pTrans * selectedMeshTransforms.scale * vecs.toVec3(2.)
+        pTrans = p * selectedMeshTransforms.scale * vecs.toVec3(2.)
+        pTrans = rotate.rotateVector(pTrans, selectedMeshTransforms.rotate)
         pTrans = pTrans + selectedMeshTransforms.translate
         glColor3f(p.x, p.y, p.z)
         glVertex3f(selectedMeshTransforms.translate.x,
@@ -101,9 +101,10 @@ def renderScene():
             outF = [msh.verts[f[0]], msh.verts[f[1]], msh.verts[f[2]]]
 
             for i in range(len(outF)):
-                transformVert = rotate.rotateVector(outF[i],
+                transformVert = outF[i] * msh.transform.scale
+                transformVert = rotate.rotateVector(transformVert,
                                                     msh.transform.rotate)
-                transformVert = transformVert * msh.transform.scale
+
                 transformVert = transformVert + msh.transform.translate
                 outF[i] = transformVert
 
@@ -141,6 +142,8 @@ ZOOM_SENSITIVIY = 1.1
 OFFSET_SENSITIVITY = 0.002
 
 MOVE_SPEED = 0.04
+SCALE_SPEED = 0.04
+ROTATE_SPEED = 0.01
 
 cam = camera.Camera()
 
@@ -157,18 +160,36 @@ keysPressed = {
     'x': False
 }
 
+currentTransform = trans.TRANSFORM_NONE
+
+
+def transformBy(inVec):
+    if currentTransform == trans.TRANSFORM_TRANSLATE:
+        scene[sceneSel].transform.translate += inVec * vecs.toVec3(MOVE_SPEED)
+    elif currentTransform == trans.TRANSFORM_SCALE:
+        scene[sceneSel].transform.scale += inVec * vecs.toVec3(SCALE_SPEED)
+    elif currentTransform == trans.TRANSFORM_ROTATE:
+        scene[sceneSel].transform.rotate += inVec * vecs.toVec3(ROTATE_SPEED)
+
+
 while True:
-    # TODO: Add rotation and scaling
     for e in pg.event.get():
         if e.type == pg.QUIT:
             pg.quit()
             quit()
         if e.type == pg.KEYDOWN:
-            if e.key == pg.K_w:
-                cam.zoom *= ZOOM_SENSITIVIY
+            # if e.key == pg.K_w:
+            #     cam.zoom *= ZOOM_SENSITIVIY
+            # elif e.key == pg.K_s:
+            #     cam.zoom /= ZOOM_SENSITIVIY
+            if e.key == pg.K_g:
+                currentTransform = trans.TRANSFORM_TRANSLATE
             elif e.key == pg.K_s:
-                cam.zoom /= ZOOM_SENSITIVIY
-
+                currentTransform = trans.TRANSFORM_SCALE
+            elif e.key == pg.K_r:
+                currentTransform = trans.TRANSFORM_ROTATE
+            elif e.key == pg.K_RETURN:
+                currentTransform = trans.TRANSFORM_NONE
             elif e.key == pg.K_LEFT:
                 keysPressed['left'] = True
             elif e.key == pg.K_RIGHT:
@@ -235,14 +256,14 @@ while True:
     pg.time.wait(1)
 
     if keysPressed['right']:
-        scene[sceneSel].transform.translate += vecs.Vec3(MOVE_SPEED, 0., 0.)
+        transformBy(vecs.Vec3(1., 0., 0.))
     if keysPressed['left']:
-        scene[sceneSel].transform.translate += vecs.Vec3(-MOVE_SPEED, 0., 0.)
+        transformBy(vecs.Vec3(-1., 0., 0.))
     if keysPressed['up']:
-        scene[sceneSel].transform.translate += vecs.Vec3(0., MOVE_SPEED, 0.)
+        transformBy(vecs.Vec3(0., 1., 0.))
     if keysPressed['down']:
-        scene[sceneSel].transform.translate += vecs.Vec3(0., -MOVE_SPEED, 0.)
+        transformBy(vecs.Vec3(0., -1., 0.))
     if keysPressed['x']:
-        scene[sceneSel].transform.translate += vecs.Vec3(0., 0., MOVE_SPEED)
+        transformBy(vecs.Vec3(0., 0., 1.))
     if keysPressed['z']:
-        scene[sceneSel].transform.translate += vecs.Vec3(0., 0., -MOVE_SPEED)
+        transformBy(vecs.Vec3(0., 0., -1.))
