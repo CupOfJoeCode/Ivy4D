@@ -17,6 +17,7 @@ import vecs
 import camera
 import rotate
 import light
+import facenormal
 
 
 # Import all the default geometries
@@ -44,14 +45,6 @@ DEFAULT_CUBE = deepcopy(CUBE_GEOMETRY)
 scene = [DEFAULT_CUBE]
 sceneSel = 0
 LIGHT = light.Light()
-
-
-# Get surface normal for a triangle with the points p1,p2,p3
-def getSurfaceNormal(p1, p2, p3):
-    u = (p2).normalized() - (p1).normalized()
-    v = (p3).normalized() - (p1).normalized()
-    return vecs.Vec3((u.y * v.z) - (u.z * v.y), (u.z * v.x) - (u.x * v.z),
-                     (u.x * v.y) - (u.y * v.x)).normalized()
 
 
 GRID_SHADE = 0.  # Shade of black for the grid
@@ -82,8 +75,9 @@ def renderScene():
                 glColor3f(GRID_SHADE, GRID_SHADE, GRID_SHADE)
                 glVertex3f(x + i[0], 0, y + i[1])
 
-    selectedMeshTransforms = scene[sceneSel].transform
+    selectedMeshTransforms = scene[sceneSel].transform  # Mesh transforms
 
+    # Draw gizmo in the middle of selected mesh
     for p in GIZMO_POINTS:
         pTrans = rotate.rotateVector(p,
                                      selectedMeshTransforms.rotate)
@@ -94,12 +88,14 @@ def renderScene():
                    selectedMeshTransforms.translate.y, selectedMeshTransforms.translate.z)
         glColor3f(p.x, p.y, p.z)
         glVertex3f(pTrans.x, pTrans.y, pTrans.z)
+
     glEnd()
-    glBegin(GL_TRIANGLES)
+
+    glBegin(GL_TRIANGLES)  # Start drawing shapes
 
     for m in range(len(scene)):
-        msh = scene[m]
-        currentCol = msh.color
+        msh = scene[m]  # Currently rendering mesh
+        currentCol = msh.color  # Mesh color
 
         for f in msh.faces:
             outF = [msh.verts[f[0]], msh.verts[f[1]], msh.verts[f[2]]]
@@ -111,8 +107,8 @@ def renderScene():
                 transformVert = transformVert + msh.transform.translate
                 outF[i] = transformVert
 
-            faceNormal = getSurfaceNormal(msh.verts[f[0]], msh.verts[f[1]],
-                                          msh.verts[f[2]])
+            faceNormal = facenormal.getSurfaceNormal(msh.verts[f[0]], msh.verts[f[1]],
+                                                     msh.verts[f[2]])
 
             averageNormal = (faceNormal.x + faceNormal.y + faceNormal.z) / 3.
             vertCol = currentCol + \
@@ -162,6 +158,7 @@ keysPressed = {
 }
 
 while True:
+    # TODO: Add rotation and scaling
     for e in pg.event.get():
         if e.type == pg.QUIT:
             pg.quit()
