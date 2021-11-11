@@ -42,6 +42,7 @@ DEFAULT_CUBE = deepcopy(CUBE_GEOMETRY)
 
 
 scene = [DEFAULT_CUBE]
+sceneSel = 0
 LIGHT = light.Light()
 
 
@@ -64,6 +65,12 @@ GIZMO_POINTS = [
     vecs.Vec3(0, 0, 1)
 ]
 
+RECT_POINTS = [
+    vecs.Vec3(-1, -1, -1),
+    vecs.Vec3(1, -1, 0),
+    vecs.Vec3(1, 1, 1),
+]
+
 
 def renderScene():
     global scene, sceneSel
@@ -83,7 +90,8 @@ def renderScene():
         pTrans = pTrans * selectedMeshTransforms.scale * vecs.toVec3(2.)
         pTrans = pTrans + selectedMeshTransforms.translate
         glColor3f(p.x, p.y, p.z)
-        glVertex3f(0, 0, 0)
+        glVertex3f(selectedMeshTransforms.translate.x,
+                   selectedMeshTransforms.translate.y, selectedMeshTransforms.translate.z)
         glColor3f(p.x, p.y, p.z)
         glVertex3f(pTrans.x, pTrans.y, pTrans.z)
     glEnd()
@@ -114,6 +122,13 @@ def renderScene():
                 glColor3f(vertCol.x, vertCol.y, vertCol.z)
                 glVertex3f(currentVert.x, currentVert.y, currentVert.z)
 
+            if m == sceneSel:
+                for currentVert in outF:
+                    for v in RECT_POINTS:
+                        glColor3f(0., 0., 0.)
+                        glVertex3f(currentVert.x + v.x/10.,
+                                   currentVert.y + v.y/10., currentVert.z + v.z/10.)
+
     glEnd()
 
 
@@ -129,11 +144,23 @@ ROTATE_SENSITIVY = 0.3
 ZOOM_SENSITIVIY = 1.1
 OFFSET_SENSITIVITY = 0.002
 
+MOVE_SPEED = 0.04
+
 cam = camera.Camera()
 
 sceneSel = 0
 
 waveOff = 0
+
+keysPressed = {
+    'left': False,
+    'right': False,
+    'up': False,
+    'down': False,
+    'z': False,
+    'x': False
+}
+
 while True:
     for e in pg.event.get():
         if e.type == pg.QUIT:
@@ -144,6 +171,32 @@ while True:
                 cam.zoom *= ZOOM_SENSITIVIY
             elif e.key == pg.K_s:
                 cam.zoom /= ZOOM_SENSITIVIY
+
+            elif e.key == pg.K_LEFT:
+                keysPressed['left'] = True
+            elif e.key == pg.K_RIGHT:
+                keysPressed['right'] = True
+            elif e.key == pg.K_UP:
+                keysPressed['up'] = True
+            elif e.key == pg.K_DOWN:
+                keysPressed['down'] = True
+            elif e.key == pg.K_z:
+                keysPressed['z'] = True
+            elif e.key == pg.K_x:
+                keysPressed['x'] = True
+        if e.type == pg.KEYUP:
+            if e.key == pg.K_LEFT:
+                keysPressed['left'] = False
+            elif e.key == pg.K_RIGHT:
+                keysPressed['right'] = False
+            elif e.key == pg.K_UP:
+                keysPressed['up'] = False
+            elif e.key == pg.K_DOWN:
+                keysPressed['down'] = False
+            elif e.key == pg.K_z:
+                keysPressed['z'] = False
+            elif e.key == pg.K_x:
+                keysPressed['x'] = False
         if e.type == pg.MOUSEBUTTONDOWN:
             if e.button == 1:
                 mouseDown = True
@@ -183,4 +236,16 @@ while True:
     pmouseX, pmouseY = (mouseX, mouseY)
     pg.display.flip()
     pg.time.wait(1)
-    scene[0].transform.rotate += vecs.Vec3(0.001, 0.002, 0.003)
+
+    if keysPressed['right']:
+        scene[sceneSel].transform.translate += vecs.Vec3(MOVE_SPEED, 0., 0.)
+    if keysPressed['left']:
+        scene[sceneSel].transform.translate += vecs.Vec3(-MOVE_SPEED, 0., 0.)
+    if keysPressed['up']:
+        scene[sceneSel].transform.translate += vecs.Vec3(0., MOVE_SPEED, 0.)
+    if keysPressed['down']:
+        scene[sceneSel].transform.translate += vecs.Vec3(0., -MOVE_SPEED, 0.)
+    if keysPressed['x']:
+        scene[sceneSel].transform.translate += vecs.Vec3(0., 0., MOVE_SPEED)
+    if keysPressed['z']:
+        scene[sceneSel].transform.translate += vecs.Vec3(0., 0., -MOVE_SPEED)
